@@ -1,6 +1,8 @@
 import com.omertron.themoviedbapi.MovieDbException;
 import com.omertron.themoviedbapi.TheMovieDbApi;
 import com.omertron.themoviedbapi.model.MovieDb;
+import com.omertron.themoviedbapi.model.ReleaseInfo;
+import com.omertron.themoviedbapi.results.TmdbResultsList;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,17 +38,23 @@ public class MovieManager {
     /**
      * Add a movie to the current movie list.
      * @param movieName The name of the movie to add.
+     * @return The movie added.
      */
-    public void addMovie(String movieName) {
-        movieList.add(findMovie(movieName));
+    public MovieDb addMovie(String movieName) {
+        MovieDb movie = findMovie(movieName);
+        movieList.add(movie);
+        return movie;
     }
 
     /**
-     * Remove a movie from the current movie list.
+     * Retrieves and removes a movie from the current movie list.
      * @param movieName The name of the movie to remove.
+     * @return The removed movie.
      */
-    public void removeMovie(String movieName) {
-        movieList.remove(findMovie(movieName));
+    public MovieDb removeMovie(String movieName) {
+        MovieDb movie = findMovie(movieName);
+        movieList.remove(movie);
+        return movie;
     }
 
     /**
@@ -58,17 +66,27 @@ public class MovieManager {
     }
 
     /**
-     * Returns the backdrop image URL for the specified movie.
-     * @param movie The movie to get the backdrop URL for.
-     * @return The backdrop image URL, or null if an image could not be obtained.
+     * Returns the complete URL of a specified partial image path.
+     * @param path The path of the image to get the complete URL for.
+     * @return The image URL, or null if an image could not be obtained.
      */
-    public URL getBackdropUrl(MovieDb movie) {
+    public URL getImageUrl(String path, String size) {
         try {
-            return movieDatabase.createImageUrl(movie.getBackdropPath(), "w780");
+            return movieDatabase.createImageUrl(path, size);
         } catch (MovieDbException e) {
             logger.log(Level.SEVERE, e.getResponse(), e);
             return null;
         }
+    }
+
+    /**
+     * Returns the release year of the specified movie.
+     * @param movie The movie to get the year for.
+     * @return The release year of the specified movie.
+     */
+    public String getReleaseYear(MovieDb movie) {
+        String releaseDate = movie.getReleaseDate();
+        return releaseDate.substring(0, releaseDate.indexOf('-'));
     }
 
     /**
@@ -96,7 +114,11 @@ public class MovieManager {
             else {
                 MovieDb chosenMovie = results.get(0);
                 logger.log(Level.INFO, "Picking first  matching movie: " + chosenMovie.getTitle());
-                result = chosenMovie;
+                String searchTerms = "belongsToCollection,genres,homepage," +
+                        "imdbID,overview,productionCompanies,spokenLanguages," +
+                        "tagline,status,alternativeTitles,casts,images,keywords," +
+                        "releases,trailers,translations,similarMovies,reviews,lists";
+                result = movieDatabase.getMovieInfo(chosenMovie.getId(), "en", searchTerms);
             }
         }
         catch (MovieDbException e) {
