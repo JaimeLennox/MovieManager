@@ -30,6 +30,8 @@ public class MovieGui {
     private JPanel outputPanel;
     private CardLayout outputLayout;
 
+    private static final float FONT_SIZE = 18;
+
     private MovieManager movieManager = new MovieManager();
 
     /**
@@ -61,6 +63,7 @@ public class MovieGui {
         frame = new JFrame("Movie Manager");
         frame.setVisible(true);
         frame.setExtendedState(frame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+        frame.setMinimumSize(new Dimension(1280, 720));
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.getContentPane().setLayout(new MigLayout("", "[grow]", "[grow]"));
 
@@ -69,7 +72,7 @@ public class MovieGui {
         movieEnterPanel.setLayout(new MigLayout("", "[grow]", "[grow]"));
 
         movieEnterTextField = new JTextField();
-        movieEnterTextField.setFont(movieEnterTextField.getFont().deriveFont((float)18));
+        movieEnterTextField.setFont(movieEnterTextField.getFont().deriveFont(FONT_SIZE));
         movieEnterTextField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -81,14 +84,14 @@ public class MovieGui {
         movieEnterPanel.add(movieEnterTextField, "cell 0 0, grow");
 
         addMovieButton = new JButton("Add movie");
-        addMovieButton.setFont(addMovieButton.getFont().deriveFont((float)18));
+        addMovieButton.setFont(addMovieButton.getFont().deriveFont(FONT_SIZE));
         addMovieButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 addMovie();
             }
         });
-        movieEnterPanel.add(addMovieButton, "cell 1 0");
+        movieEnterPanel.add(addMovieButton, "cell 0 0");
 
         movieListPanel = new JPanel();
         movieListPanel.setMinimumSize(new Dimension(300, 0));
@@ -125,9 +128,9 @@ public class MovieGui {
      */
     private void createMoviePanel(final MovieDb movie) {
 
-        final JPanel newMoviePanel = new JPanel();
-        newMoviePanel.setVisible(false);
-        newMoviePanel.setLayout(new MigLayout());
+        if (movie == null) {
+            return;
+        }
 
         BufferedImage backdrop = null;
         BufferedImage poster = null;
@@ -163,17 +166,33 @@ public class MovieGui {
         JLabel overviewLabel = new JLabel("Overview: ");
         JLabel castLabel = new JLabel("Cast: ");
 
-        JTextArea overviewTextArea = new JTextArea(movie.getOverview());
-        JTextArea castTextArea = new JTextArea(castList.toString());
+        JTextPane overviewTextArea = new JTextPane();
+        JTextPane castTextArea = new JTextPane();
 
-        newMoviePanel.add(movieNameLabel, "cell 0 0, flowy");
-        newMoviePanel.add(taglineLabel, "cell 0 0");
-        newMoviePanel.add(backdropLabel, "cell 0 1");
-        newMoviePanel.add(posterLabel, "cell 0 1");
-        newMoviePanel.add(overviewLabel, "cell 0 2");
-        newMoviePanel.add(overviewTextArea, "cell 0 2");
-        newMoviePanel.add(castLabel, "cell 0 3");
-        newMoviePanel.add(castTextArea, "cell 0 3");
+        overviewLabel.setFont(overviewLabel.getFont().deriveFont(FONT_SIZE));
+        castLabel.setFont(overviewLabel.getFont().deriveFont(FONT_SIZE));
+        overviewTextArea.setFont(overviewTextArea.getFont().deriveFont(FONT_SIZE));
+        castTextArea.setFont(overviewTextArea.getFont().deriveFont(FONT_SIZE));
+
+        overviewTextArea.setText(movie.getOverview());
+        castTextArea.setText(castList.toString());
+
+        JPanel newMoviePanel = new JPanel();
+        newMoviePanel.setVisible(false);
+        newMoviePanel.setLayout(new MigLayout());
+
+        JPanel infoPanel = new JPanel();
+        infoPanel.setLayout(new MigLayout());
+        infoPanel.add(overviewLabel);
+        infoPanel.add(overviewTextArea, "wrap");
+        infoPanel.add(castLabel);
+        infoPanel.add(castTextArea, "wrap");
+
+        newMoviePanel.add(movieNameLabel, "wrap");
+        newMoviePanel.add(taglineLabel, "wrap");
+        newMoviePanel.add(backdropLabel);
+        newMoviePanel.add(posterLabel, "wrap");
+        newMoviePanel.add(infoPanel, "span");
 
         outputPanel.add(newMoviePanel, Integer.toString(movie.getId()));
     }
@@ -192,7 +211,7 @@ public class MovieGui {
                 setText(movie.getTitle());
             }
 
-            setFont(getFont().deriveFont((float)18));
+            setFont(getFont().deriveFont(FONT_SIZE));
 
             return this;
         }
