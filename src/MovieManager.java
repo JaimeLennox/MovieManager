@@ -1,8 +1,6 @@
 import com.omertron.themoviedbapi.MovieDbException;
 import com.omertron.themoviedbapi.TheMovieDbApi;
 import com.omertron.themoviedbapi.model.MovieDb;
-import com.omertron.themoviedbapi.model.ReleaseInfo;
-import com.omertron.themoviedbapi.results.TmdbResultsList;
 
 import java.io.BufferedReader;
 import java.io.IOException;
