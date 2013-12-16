@@ -31,7 +31,7 @@ public class MovieManager {
             movieList = new ArrayList<>();
         }
         catch (MovieDbException e) {
-            logger.log(Level.SEVERE, "Could not initialise api.", e);
+            logger.log(Level.SEVERE, "Could not initialise api.");
         }
     }
 
@@ -74,7 +74,7 @@ public class MovieManager {
         try {
             return movieDatabase.createImageUrl(path, size);
         } catch (MovieDbException e) {
-            logger.log(Level.SEVERE, e.getResponse(), e);
+            logger.log(Level.SEVERE, e.getResponse());
             return null;
         }
     }
@@ -122,7 +122,7 @@ public class MovieManager {
             }
         }
         catch (MovieDbException e) {
-            logger.log(Level.WARNING, "No movies found.", e);
+            logger.log(Level.WARNING, "No movies found.");
             result = null;
         }
 
