@@ -12,7 +12,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 public class MovieGui {
 
@@ -21,6 +24,8 @@ public class MovieGui {
     private JPanel movieEnterPanel;
     private JTextField movieEnterTextField;
     private JButton addMovieButton;
+
+    private JButton scanButton;
 
     private JPanel movieListPanel;
     private MovieListModel movieListModel;
@@ -94,10 +99,27 @@ public class MovieGui {
         movieEnterPanel.add(addMovieButton, "cell 0 0");
 
         movieListPanel = new JPanel();
-        movieListPanel.setMinimumSize(new Dimension(300, 0));
-        movieListPanel.setMaximumSize(new Dimension(300, Integer.MAX_VALUE));
+        movieListPanel.setMinimumSize(new Dimension(400, 0));
+        movieListPanel.setMaximumSize(new Dimension(400, Integer.MAX_VALUE));
         frame.getContentPane().add(movieListPanel, "grow");
-        movieListPanel.setLayout(new MigLayout("", "[grow]", "[grow]"));
+        movieListPanel.setLayout(new MigLayout("flowy", "[grow]", "[grow]"));
+
+        scanButton = new JButton("Scan for movies");
+        scanButton.setFont(scanButton.getFont().deriveFont(FONT_SIZE));
+        scanButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                final JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+                if (fileChooser.showOpenDialog(frame) != JFileChooser.APPROVE_OPTION) {
+                    return;
+                }
+
+                scanForMovies(fileChooser.getSelectedFile());
+            }
+        });
+        movieListPanel.add(scanButton, "growx, split");
 
         movieListModel = new MovieListModel(movieManager);
         movieList = new JList<>(movieListModel);
@@ -119,6 +141,52 @@ public class MovieGui {
         if (!name.isEmpty()) {
             movieListModel.addElement(name);
         }
+    }
+
+    private void scanForMovies(File folder) {
+
+        for (File file : folder.listFiles()) {
+            if (file.isFile() && isMovieFile(file)) {
+                // Remove extensions from name and add to model.
+                movieListModel.addElement(getMovieName(file.getName()));
+            }
+            // Recurse into other directories.
+            else if (file.isDirectory()) {
+                scanForMovies(file);
+            }
+        }
+
+    }
+
+    private String getMovieName(String fileName) {
+        StringBuilder stringBuilder = new StringBuilder();
+        List<String> parts = Arrays.asList(fileName.split("\\."));
+
+        for (String part : parts) {
+            try {
+                Integer.parseInt(part);
+                break;
+            }
+            catch (NumberFormatException e) {
+                stringBuilder.append(part).append(" ");
+            }
+        }
+
+        return stringBuilder.toString();
+    }
+
+    private boolean isMovieFile(File file) {
+
+        final List<String> movieExtensions = Arrays.asList("mp4", "avi", "flv",
+                "webm", "ogg", "mov" ,"3gp", "wmv");
+
+        for (String extension : movieExtensions) {
+            if (file.getName().endsWith(extension)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
