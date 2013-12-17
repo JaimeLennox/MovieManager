@@ -30,6 +30,7 @@ public class MovieManager {
         }
         catch (MovieDbException e) {
             logger.log(Level.SEVERE, "Could not initialise api.");
+            System.exit(1);
         }
     }
 
