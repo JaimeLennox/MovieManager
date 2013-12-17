@@ -36,13 +36,19 @@ public class MovieManager {
 
     /**
      * Add a movie to the current movie list.
-     * @param movieName The name of the movie to add.
-     * @return The movie added.
+     * 
+     * @param movieName
+     *            The name of the movie to add.
+     * @return The movie added, null if no movie found.
      */
     public MovieDb addMovie(String movieName) {
         MovieDb movie = findMovie(movieName);
-        movieList.add(movie);
-        return movie;
+        if (movie != null) {
+            movieList.add(movie);
+            return movie;
+        } else {
+            return null;
+        }
     }
 
     /**
