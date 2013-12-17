@@ -283,8 +283,13 @@ public class MovieGui {
         }
 
         public void addElement(String element) {
-            createMoviePanel(movieManager.addMovie(element));
-            fireIntervalAdded(this, getSize() - 1, getSize() - 1);
+            MovieDb movie = movieManager.addMovie(element);
+            if (movie != null) {
+                createMoviePanel(movie);
+                fireIntervalAdded(this, getSize() - 1, getSize() - 1);
+            } else {
+                JOptionPane.showMessageDialog(frame, "No movies found.");
+            }
         }
 
         @Override
