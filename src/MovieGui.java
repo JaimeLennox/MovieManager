@@ -35,7 +35,6 @@ public class MovieGui {
     private JPanel outputPanel;
     private CardLayout outputLayout;
 
-    private static final float FONT_SIZE = 18;
 
     private MovieManager movieManager = new MovieManager();
 
@@ -77,7 +76,6 @@ public class MovieGui {
         movieEnterPanel.setLayout(new MigLayout("", "[grow]", "[grow]"));
 
         movieEnterTextField = new JTextField();
-        movieEnterTextField.setFont(movieEnterTextField.getFont().deriveFont(FONT_SIZE));
         movieEnterTextField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(KeyEvent e) {
@@ -89,7 +87,6 @@ public class MovieGui {
         movieEnterPanel.add(movieEnterTextField, "cell 0 0, grow");
 
         addMovieButton = new JButton("Add movie");
-        addMovieButton.setFont(addMovieButton.getFont().deriveFont(FONT_SIZE));
         addMovieButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -105,7 +102,6 @@ public class MovieGui {
         movieListPanel.setLayout(new MigLayout("flowy", "[grow]", "[grow]"));
 
         scanButton = new JButton("Scan for movies");
-        scanButton.setFont(scanButton.getFont().deriveFont(FONT_SIZE));
         scanButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -237,11 +233,6 @@ public class MovieGui {
         JTextPane overviewTextArea = new JTextPane();
         JTextPane castTextArea = new JTextPane();
 
-        overviewLabel.setFont(overviewLabel.getFont().deriveFont(FONT_SIZE));
-        castLabel.setFont(overviewLabel.getFont().deriveFont(FONT_SIZE));
-        overviewTextArea.setFont(overviewTextArea.getFont().deriveFont(FONT_SIZE));
-        castTextArea.setFont(overviewTextArea.getFont().deriveFont(FONT_SIZE));
-
         overviewTextArea.setText(movie.getOverview());
         castTextArea.setText(castList.toString());
 
@@ -278,8 +269,6 @@ public class MovieGui {
                 MovieDb movie = (MovieDb) value;
                 setText(movie.getTitle());
             }
-
-            setFont(getFont().deriveFont(FONT_SIZE));
 
             return this;
         }
