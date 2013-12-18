@@ -12,6 +12,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MovieGui {
 
@@ -40,6 +42,8 @@ public class MovieGui {
 
     private MovieManager movieManager = new MovieManager();
     private List<Movie> movieInfoList = new ArrayList<>();
+
+    private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
 
     /**
      * Launch the application.
@@ -144,17 +148,22 @@ public class MovieGui {
 
     private void scanForMovies(File folder) {
 
-        for (File file : folder.listFiles()) {
-            if (file.isFile() && isMovieFile(file)) {
-                // Remove extensions from name and add to model.
-                movieListModel.addElement(getMovieName(file.getName()));
-            }
-            // Recurse into other directories.
-            else if (file.isDirectory()) {
-                scanForMovies(file);
-            }
-        }
+        for (final File file : folder.listFiles()) {
 
+            EXECUTOR_SERVICE.submit(new Runnable() {
+                @Override
+                public void run() {
+                    if (file.isFile() && isMovieFile(file)) {
+                        // Remove extensions from name and add to model.
+                        movieListModel.addElement(getMovieName(file.getName()));
+                    }
+                    // Recurse into other directories.
+                    else if (file.isDirectory()) {
+                        scanForMovies(file);
+                    }
+                }
+            });
+        }
     }
 
     private String getMovieName(String fileName) {
