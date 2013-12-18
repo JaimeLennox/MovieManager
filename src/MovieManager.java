@@ -44,7 +44,7 @@ public class MovieManager {
         MovieDb movieDb = findMovie(movieName);
         if (movieDb != null) {
             Movie movie = new Movie(this, movieDb);
-            movieList.add(movie);
+            addSorted(movie);
             return movie;
         }
 
@@ -132,6 +132,28 @@ public class MovieManager {
         }
 
         return result;
+    }
+
+    /**
+     * Adds a movie the current movie list, keeping the list sorted.
+     * @param movie The movie to add.
+     */
+    private void addSorted(Movie movie) {
+
+        if (movieList.size() == 0) {
+            movieList.add(movie);
+            return;
+        }
+
+        for (int i = 0; i < movieList.size(); i++) {
+            Movie listMovie = movieList.get(i);
+            if (movie.getMovie().getTitle().compareToIgnoreCase(listMovie.getMovie().getTitle()) < 0) {
+                movieList.add(i, movie);
+                return;
+            }
+        }
+
+        movieList.add(movie);
     }
 
     public static void main(String[] args) throws IOException {

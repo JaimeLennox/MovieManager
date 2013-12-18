@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.List;
 import java.util.logging.Level;
 
-public class Movie {
+public class Movie implements Comparable<Movie> {
 
     private MovieManager movieManager;
     private MovieDb movie;
@@ -41,6 +41,11 @@ public class Movie {
     @Override
     public String toString() {
         return getMovie().getTitle();
+    }
+
+    @Override
+    public int compareTo(Movie o) {
+        return movie.getTitle().compareTo(o.getMovie().getTitle());
     }
 
     private void createCast(MovieDb movie) {
