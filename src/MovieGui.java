@@ -1,8 +1,5 @@
-import com.omertron.themoviedbapi.model.MovieDb;
-import com.omertron.themoviedbapi.model.PersonCast;
 import net.miginfocom.swing.MigLayout;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -11,9 +8,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,14 +25,21 @@ public class MovieGui {
 
     private JPanel movieListPanel;
     private MovieListModel movieListModel;
-    private JList<MovieDb> movieList;
+    private JList<Movie> movieList;
     private JScrollPane movieListScrollPane;
 
     private JPanel outputPanel;
-    private CardLayout outputLayout;
-
+    private JLabel movieNameLabel;
+    private JLabel taglineLabel;
+    private JLabel overviewLabel;
+    private JLabel backdropLabel;
+    private JLabel posterLabel;
+    private JLabel castLabel;
+    private JTextPane overviewTextArea;
+    private JTextPane castTextArea;
 
     private MovieManager movieManager = new MovieManager();
+    private List<Movie> movieInfoList = new ArrayList<>();
 
     /**
      * Launch the application.
@@ -127,8 +130,8 @@ public class MovieGui {
 
         outputPanel = new JPanel();
         frame.getContentPane().add(outputPanel, "grow");
-        outputLayout = new CardLayout();
-        outputPanel.setLayout(outputLayout);
+
+        createMoviePanel();
     }
 
     private void addMovie() {
@@ -186,59 +189,22 @@ public class MovieGui {
     }
 
     /**
-     * Dynamically create a movie panel for each movie. This is added to a
-     * global CardLayout to switch when needed.
-     * @param movie The movie to create the panel for.
+     * Initialise an empty panel with space for movie information.
      */
-    private void createMoviePanel(final MovieDb movie) {
-
-        if (movie == null) {
-            return;
-        }
-
-        BufferedImage backdrop = null;
-        BufferedImage poster = null;
-        try {
-            backdrop = ImageIO.read(movieManager.getImageUrl(
-                    movie.getBackdropPath(), "w780"));
-            poster = ImageIO.read(movieManager.getImageUrl(
-                    movie.getPosterPath(), "w342"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // Scale image to poster height, adjusting width as necessary (via -1).
-        ImageIcon backdropImage = new ImageIcon(backdrop.getScaledInstance(
-                -1, poster.getHeight(), Image.SCALE_SMOOTH));
-        ImageIcon posterImage = new ImageIcon(poster);
-
-        StringBuilder castList = new StringBuilder();
-        for (PersonCast person : movie.getCast()) {
-            castList.append(person.getName());
-            castList.append(", ");
-        }
-
-        JLabel movieNameLabel = new JLabel(movie.getTitle() + " ("
-                + movieManager.getReleaseYear(movie) + ")");
+    private void createMoviePanel() {
+        movieNameLabel = new JLabel();
         movieNameLabel.setFont(new Font("Tahoma", Font.BOLD, 24));
 
-        JLabel taglineLabel = new JLabel(movie.getTagline());
+        taglineLabel = new JLabel();
         taglineLabel.setFont(new Font("Tahoma", Font.ITALIC, 18));
 
-        JLabel backdropLabel = new JLabel(backdropImage);
-        JLabel posterLabel = new JLabel(posterImage);
-        JLabel overviewLabel = new JLabel("Overview: ");
-        JLabel castLabel = new JLabel("Cast: ");
+        backdropLabel = new JLabel();
+        posterLabel = new JLabel();
+        overviewLabel = new JLabel("Overview: ");
+        castLabel = new JLabel("Cast: ");
 
-        JTextPane overviewTextArea = new JTextPane();
-        JTextPane castTextArea = new JTextPane();
-
-        overviewTextArea.setText(movie.getOverview());
-        castTextArea.setText(castList.toString());
-
-        JPanel newMoviePanel = new JPanel();
-        newMoviePanel.setVisible(false);
-        newMoviePanel.setLayout(new MigLayout());
+        overviewTextArea = new JTextPane();
+        castTextArea = new JTextPane();
 
         JPanel infoPanel = new JPanel();
         infoPanel.setLayout(new MigLayout());
@@ -247,13 +213,37 @@ public class MovieGui {
         infoPanel.add(castLabel);
         infoPanel.add(castTextArea, "wrap");
 
-        newMoviePanel.add(movieNameLabel, "wrap");
-        newMoviePanel.add(taglineLabel, "wrap");
-        newMoviePanel.add(backdropLabel);
-        newMoviePanel.add(posterLabel, "wrap");
-        newMoviePanel.add(infoPanel, "span");
+        outputPanel.setVisible(false);
+        outputPanel.setLayout(new MigLayout());
 
-        outputPanel.add(newMoviePanel, Integer.toString(movie.getId()));
+        outputPanel.add(movieNameLabel, "wrap");
+        outputPanel.add(taglineLabel, "wrap");
+        outputPanel.add(backdropLabel);
+        outputPanel.add(posterLabel, "wrap");
+        outputPanel.add(infoPanel, "span");
+    }
+
+    /**
+     * Switch the output panel to the selected movie's information.
+     * @param movie The movie to switch to.
+     */
+    private void changeMovie(final Movie movie) {
+
+        if (movie == null) {
+            return;
+        }
+
+        movieNameLabel.setText(movie.getMovie().getTitle() + " ("
+                + movieManager.getReleaseYear(movie) + ")");
+        taglineLabel.setText(movie.getMovie().getTagline());
+
+        backdropLabel.setIcon(movie.getImage(ImageType.BACKDROP));
+        posterLabel.setIcon(movie.getImage(ImageType.POSTER));
+
+        overviewTextArea.setText(movie.getMovie().getOverview());
+        castTextArea.setText(movie.getCastList());
+
+        outputPanel.setVisible(true);
     }
 
     private class MovieListRenderer extends DefaultListCellRenderer {
@@ -265,16 +255,16 @@ public class MovieGui {
 
             super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
 
-            if (value instanceof MovieDb) {
-                MovieDb movie = (MovieDb) value;
-                setText(movie.getTitle());
+            if (value instanceof Movie) {
+                Movie movie = (Movie) value;
+                setText(movie.getMovie().getTitle());
             }
 
             return this;
         }
     }
 
-    private class MovieListModel extends AbstractListModel<MovieDb> {
+    private class MovieListModel extends AbstractListModel<Movie> {
 
         private MovieManager movieManager;
 
@@ -282,9 +272,10 @@ public class MovieGui {
             this.movieManager = movieManager;
         }
 
-        public void addElement(String element) {
-            createMoviePanel(movieManager.addMovie(element));
-            fireIntervalAdded(this, getSize() - 1, getSize() - 1);
+        public void addElement(final String element) {
+            changeMovie(movieManager.addMovie(element));
+            int interval = getSize() == 0 ? getSize() : getSize() - 1;
+            fireIntervalAdded(this, interval, interval);
         }
 
         @Override
@@ -293,25 +284,25 @@ public class MovieGui {
         }
 
         @Override
-        public MovieDb getElementAt(int index) {
+        public Movie getElementAt(int index) {
             return movieManager.getMovieList().get(index);
         }
     }
 
-    private class MovieSelectionListener implements ListSelectionListener{
+    private class MovieSelectionListener implements ListSelectionListener {
 
         @Override
         public void valueChanged(ListSelectionEvent e) {
 
             if (!e.getValueIsAdjusting()) {
 
-                final MovieDb movie = ((JList<MovieDb>) e.getSource()).getSelectedValue();
+                final Movie movie = ((JList<Movie>) e.getSource()).getSelectedValue();
 
                 if (movie != null) {
                     SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
-                            outputLayout.show(outputPanel, Integer.toString(movie.getId()));
+                            changeMovie(movie);
                         }
                     });
                 }

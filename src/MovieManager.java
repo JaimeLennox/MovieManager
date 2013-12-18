@@ -17,11 +17,11 @@ import java.util.logging.Logger;
  */
 public class MovieManager {
 
-    private static final Logger logger = Logger.getLogger(MovieManager.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(MovieManager.class.getName());
     private static final String API_KEY = "MY_API_KEY";
 
     private TheMovieDbApi movieDatabase;
-    private List<MovieDb> movieList;
+    private List<Movie> movieList;
 
     public MovieManager() {
         try {
@@ -29,20 +29,26 @@ public class MovieManager {
             movieList = new ArrayList<>();
         }
         catch (MovieDbException e) {
-            logger.log(Level.SEVERE, "Could not initialise api.");
+            LOGGER.log(Level.SEVERE, "Could not initialise api.");
             System.exit(1);
         }
     }
 
     /**
-     * Add a movie to the current movie list.
+     * Add a movie to the current movie list, if found.
      * @param movieName The name of the movie to add.
-     * @return The movie added.
+     * @return The movie added, or null if the movie could not be found.
      */
-    public MovieDb addMovie(String movieName) {
-        MovieDb movie = findMovie(movieName);
-        movieList.add(movie);
-        return movie;
+    public Movie addMovie(String movieName) {
+
+        MovieDb movieDb = findMovie(movieName);
+        if (movieDb != null) {
+            Movie movie = new Movie(this, movieDb);
+            movieList.add(movie);
+            return movie;
+        }
+
+        return null;
     }
 
     /**
@@ -60,7 +66,7 @@ public class MovieManager {
      * Retrieves the current movie list in this movie manager.
      * @return The current movie list.
      */
-    public List<MovieDb> getMovieList() {
+    public List<Movie> getMovieList() {
         return movieList;
     }
 
@@ -73,7 +79,7 @@ public class MovieManager {
         try {
             return movieDatabase.createImageUrl(path, size);
         } catch (MovieDbException e) {
-            logger.log(Level.SEVERE, e.getResponse());
+            LOGGER.log(Level.SEVERE, e.getResponse());
             return null;
         }
     }
@@ -83,8 +89,8 @@ public class MovieManager {
      * @param movie The movie to get the year for.
      * @return The release year of the specified movie.
      */
-    public String getReleaseYear(MovieDb movie) {
-        String releaseDate = movie.getReleaseDate();
+    public String getReleaseYear(Movie movie) {
+        String releaseDate = movie.getMovie().getReleaseDate();
         return releaseDate.substring(0, releaseDate.indexOf('-'));
     }
 
@@ -95,7 +101,7 @@ public class MovieManager {
      */
     private MovieDb findMovie(String movieName) {
 
-        logger.log(Level.INFO, "Searching for movie: " + movieName);
+        LOGGER.log(Level.INFO, "Searching for movie: " + movieName);
         MovieDb result;
 
         try {
@@ -103,7 +109,7 @@ public class MovieManager {
                     movieName, 0, null, false, 0).getResults();
 
             for (MovieDb potentialMovie : results) {
-                logger.log(Level.INFO, "Potential movie: " + potentialMovie.getTitle());
+                LOGGER.log(Level.INFO, "Potential movie: " + potentialMovie.getTitle());
             }
 
             if (results.isEmpty()) {
@@ -112,7 +118,7 @@ public class MovieManager {
             }
             else {
                 MovieDb chosenMovie = results.get(0);
-                logger.log(Level.INFO, "Picking first  matching movie: " + chosenMovie.getTitle());
+                LOGGER.log(Level.INFO, "Picking first  matching movie: " + chosenMovie.getTitle());
                 String searchTerms = "belongsToCollection,genres,homepage," +
                         "imdbID,overview,productionCompanies,spokenLanguages," +
                         "tagline,status,alternativeTitles,casts,images,keywords," +
@@ -121,7 +127,7 @@ public class MovieManager {
             }
         }
         catch (MovieDbException e) {
-            logger.log(Level.WARNING, "No movies found.");
+            LOGGER.log(Level.WARNING, "No movies found.");
             result = null;
         }
 
@@ -132,7 +138,7 @@ public class MovieManager {
 
         MovieManager movieManager = new MovieManager();
         movieManager.addMovie(new BufferedReader(new InputStreamReader(System.in)).readLine());
-        for (MovieDb movie : movieManager.movieList) {
+        for (Movie movie : movieManager.movieList) {
             System.out.println(movie.toString());
         }
     }
