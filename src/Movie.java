@@ -5,6 +5,7 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,19 +16,25 @@ public class Movie implements Comparable<Movie> {
 
     private MovieManager movieManager;
     private MovieDb movie;
+    private File movieFile;
     private String castList;
     private Map<ImageType, ImageIcon> images = new HashMap<>();
 
-    public Movie(MovieManager movieManager, MovieDb movie) {
+    public Movie(MovieManager movieManager, MovieDb movie, File movieFile) {
 
         this.movieManager = movieManager;
         this.movie = movie;
+        this.movieFile = movieFile;
         createCast(movie);
         createImages(movie);
     }
 
     public MovieDb getMovie() {
         return movie;
+    }
+
+    public File getMovieFile() {
+        return movieFile;
     }
 
     public String getCastList() {

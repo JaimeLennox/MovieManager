@@ -3,6 +3,7 @@ import com.omertron.themoviedbapi.TheMovieDbApi;
 import com.omertron.themoviedbapi.model.MovieDb;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -39,11 +40,11 @@ public class MovieManager {
      * @param movieName The name of the movie to add.
      * @return The movie added, or null if the movie could not be found.
      */
-    public Movie addMovie(String movieName) {
+    public Movie addMovie(String movieName, File movieFile) {
 
         MovieDb movieDb = findMovie(movieName);
         if (movieDb != null) {
-            Movie movie = new Movie(this, movieDb);
+            Movie movie = new Movie(this, movieDb, movieFile);
             addSorted(movie);
             return movie;
         }
@@ -159,7 +160,7 @@ public class MovieManager {
     public static void main(String[] args) throws IOException {
 
         MovieManager movieManager = new MovieManager();
-        movieManager.addMovie(new BufferedReader(new InputStreamReader(System.in)).readLine());
+        movieManager.addMovie(new BufferedReader(new InputStreamReader(System.in)).readLine(), null);
         for (Movie movie : movieManager.movieList) {
             System.out.println(movie.toString());
         }

@@ -4,16 +4,16 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
+import java.beans.PropertyChangeListener;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
 
 public class MovieGui {
 
@@ -41,7 +41,6 @@ public class MovieGui {
     private JTextPane castTextArea;
 
     private MovieManager movieManager = new MovieManager();
-    private List<Movie> movieInfoList = new ArrayList<>();
 
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
 
@@ -129,6 +128,42 @@ public class MovieGui {
         movieList.setCellRenderer(new MovieListRenderer());
         movieList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         movieList.addListSelectionListener(new MovieSelectionListener());
+        movieList.addMouseListener(new ListAction(movieList, new Action() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    Desktop.getDesktop().open(movieList.getSelectedValue().getMovieFile());
+                } catch (IOException e1) {
+                    MovieManager.LOGGER.log(Level.WARNING, "Could not play movie.");
+                }
+            }
+
+            @Override
+            public Object getValue(String key) {
+                return null;
+            }
+
+            @Override
+            public void putValue(String key, Object value) {
+            }
+
+            @Override
+            public void setEnabled(boolean b) {
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return false;
+            }
+
+            @Override
+            public void addPropertyChangeListener(PropertyChangeListener listener) {
+            }
+
+            @Override
+            public void removePropertyChangeListener(PropertyChangeListener listener) {
+            }
+        }));
         movieListScrollPane = new JScrollPane(movieList);
         movieListPanel.add(movieListScrollPane, "grow");
 
@@ -142,7 +177,7 @@ public class MovieGui {
         String name = movieEnterTextField.getText();
 
         if (!name.isEmpty()) {
-            movieListModel.addElement(name);
+            movieListModel.addElement(name, null);
         }
     }
 
@@ -155,7 +190,7 @@ public class MovieGui {
                 public void run() {
                     if (file.isFile() && isMovieFile(file)) {
                         // Remove extensions from name and add to model.
-                        movieListModel.addElement(getMovieName(file.getName()));
+                        movieListModel.addElement(getMovieName(file.getName()), file);
                     }
                     // Recurse into other directories.
                     else if (file.isDirectory()) {
@@ -281,8 +316,8 @@ public class MovieGui {
             this.movieManager = movieManager;
         }
 
-        public void addElement(final String element) {
-            changeMovie(movieManager.addMovie(element));
+        public void addElement(String element, File movieFile) {
+            changeMovie(movieManager.addMovie(element, movieFile));
             int interval = getSize() == 0 ? getSize() : getSize() - 1;
             fireIntervalAdded(this, interval, interval);
         }
@@ -317,6 +352,45 @@ public class MovieGui {
                 }
             }
         }
+    }
+
+    private class ListAction extends MouseAdapter {
+
+        private JList list;
+        private KeyStroke keyStroke;
+
+        public ListAction(JList list, Action action) {
+            this.list = list;
+            keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
+
+            //  Add the KeyStroke to the InputMap.
+            InputMap inputMap = list.getInputMap();
+            inputMap.put(keyStroke, keyStroke);
+
+            //  Add the Action to the ActionMap.
+            setAction(action);
+
+            //  Handle mouse double click.
+            list.addMouseListener( this );
+        }
+
+        public void setAction(Action action) {
+            list.getActionMap().put(keyStroke, action);
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            if (e.getClickCount() == 2) {
+                Action action = list.getActionMap().get(keyStroke);
+
+                if (action != null) {
+                    ActionEvent event = new ActionEvent(list,
+                            ActionEvent.ACTION_PERFORMED, "");
+                    action.actionPerformed(event);
+                }
+            }
+        }
+
     }
 
 }
