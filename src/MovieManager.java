@@ -53,14 +53,11 @@ public class MovieManager {
     }
 
     /**
-     * Retrieves and removes a movie from the current movie list.
-     * @param movieName The name of the movie to remove.
-     * @return The removed movie.
+     * Removes a movie from the current movie list.
+     * @param movie The movie to remove.
      */
-    public MovieDb removeMovie(String movieName) {
-        MovieDb movie = findMovie(movieName);
+    public void removeMovie(Movie movie) {
         movieList.remove(movie);
-        return movie;
     }
 
     /**
