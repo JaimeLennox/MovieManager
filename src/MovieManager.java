@@ -2,10 +2,7 @@ import com.omertron.themoviedbapi.MovieDbException;
 import com.omertron.themoviedbapi.TheMovieDbApi;
 import com.omertron.themoviedbapi.model.MovieDb;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +16,28 @@ import java.util.logging.Logger;
 public class MovieManager {
 
     public static final Logger LOGGER = Logger.getLogger(MovieManager.class.getName());
-    private static final String API_KEY = "MY_API_KEY";
+    private static final String API_KEY = getApiKey();
+
+    /**
+     * Retrieves the MovieDb API key stored in the file "api.key". If this file
+     * does not exist, it is created and the user will need to enter an API key
+     * in there.
+     * @return The MovieDb API key to be used
+     */
+    private static String getApiKey() {
+        File file = new File("api.key");
+
+        try {
+            if (!file.createNewFile()) {
+                String key = new BufferedReader(new FileReader(file)).readLine();
+                return key;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
 
     private TheMovieDbApi movieDatabase;
     private List<Movie> movieList;
