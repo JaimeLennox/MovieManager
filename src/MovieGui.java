@@ -8,7 +8,6 @@ import java.awt.event.*;
 import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -171,13 +170,15 @@ public class MovieGui {
         frame.getContentPane().add(outputPanel, "grow");
 
         createMoviePanel();
+
+        frame.pack();
     }
 
     private void addMovie() {
         String name = movieEnterTextField.getText();
 
         if (!name.isEmpty()) {
-            movieListModel.addElement(name, null);
+            movieListModel.addElement(name, null, true);
         }
     }
 
@@ -189,8 +190,11 @@ public class MovieGui {
                 @Override
                 public void run() {
                     if (file.isFile() && isMovieFile(file)) {
-                        // Remove extensions from name and add to model.
-                        movieListModel.addElement(getMovieName(file.getName()), file);
+                        synchronized (this) {
+                            // Remove extensions from name and add to model.
+                            movieListModel.addElement(getMovieName(file.getName()),
+                                    file, false);
+                        }
                     }
                     // Recurse into other directories.
                     else if (file.isDirectory()) {
@@ -316,9 +320,15 @@ public class MovieGui {
             this.movieManager = movieManager;
         }
 
-        public void addElement(String element, File movieFile) {
-            changeMovie(movieManager.addMovie(element, movieFile));
-            int interval = getSize() == 0 ? getSize() : getSize() - 1;
+        public void addElement(String element, File movieFile, boolean switchToMovie) {
+
+            Movie movie = movieManager.addMovie(element, movieFile);
+            if (switchToMovie) {
+                changeMovie(movie);
+            }
+
+            int listSize = getSize();
+            int interval = listSize == 0 ? listSize : listSize - 1;
             fireIntervalAdded(this, interval, interval);
         }
 
