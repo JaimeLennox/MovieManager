@@ -30,8 +30,7 @@ public class MovieManager {
 
         try {
             if (!file.createNewFile()) {
-                String key = new BufferedReader(new FileReader(file)).readLine();
-                return key;
+                return new BufferedReader(new FileReader(file)).readLine();
             }
         } catch (IOException e) {
             e.printStackTrace();
