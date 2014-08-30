@@ -2,6 +2,7 @@ import com.omertron.themoviedbapi.MovieDbException;
 import com.omertron.themoviedbapi.TheMovieDbApi;
 import com.omertron.themoviedbapi.model.MovieDb;
 
+import javax.swing.*;
 import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
@@ -49,6 +50,9 @@ public class MovieManager {
         }
         catch (MovieDbException e) {
             LOGGER.log(Level.SEVERE, "Could not initialise api.");
+            JOptionPane.showMessageDialog(new JFrame(),
+                    "Please add an API key for TheMovieDb in api.key",
+                    "No API key found", JOptionPane.ERROR_MESSAGE);
             System.exit(1);
         }
     }
