@@ -1,6 +1,13 @@
+api.key
 *.class
 
 # Package Files #
 *.jar
 *.war
 *.ear
+
+# Intellij project files
+.idea/
+*.iml
+*.classpath
+*.project
