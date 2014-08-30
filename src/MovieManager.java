@@ -5,6 +5,10 @@ import com.omertron.themoviedbapi.model.MovieDb;
 import javax.swing.*;
 import java.io.*;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -18,6 +22,7 @@ public class MovieManager {
 
     public static final Logger LOGGER = Logger.getLogger(MovieManager.class.getName());
     private static final String API_KEY = getApiKey();
+    private static final String DB_NAME = "movies.db";
 
     /**
      * Retrieves the MovieDb API key stored in the file "api.key". If this file
@@ -46,6 +51,7 @@ public class MovieManager {
         try {
             movieDatabase = new TheMovieDbApi(API_KEY);
             movieList = new ArrayList<>();
+            initDatabase();
         }
         catch (MovieDbException e) {
             LOGGER.log(Level.SEVERE, "Could not initialise api.");
@@ -57,8 +63,104 @@ public class MovieManager {
     }
 
     /**
+     * Initialise internal database for storing found movies.
+     */
+    private void initDatabase() {
+        File dbfile = new File(DB_NAME);
+        boolean newDb = !dbfile.exists();
+
+        try {
+            Class.forName("org.sqlite.JDBC");
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:" + DB_NAME);
+
+            if (newDb) createTables(connection);
+
+            connection.close();
+        }
+        catch (ClassNotFoundException | SQLException e) {
+            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, e.getMessage());
+        }
+
+        LOGGER.log(Level.INFO, "Database initialised.");
+    }
+
+    /**
+     * Setup new tables for a new database.
+     */
+    private void createTables(Connection connection) throws SQLException {
+        PreparedStatement createStatement = connection.prepareStatement(
+                "CREATE TABLE MOVIES (" +
+                "ID        INT   NOT NULL  PRIMARY KEY, " +
+                "NAME      TEXT  NOT NULL,              " +
+                "FILEPATH  TEXT  NOT NULL,              " +
+                "CAST      TEXT  NOT NULL              )"
+        );
+        createStatement.executeUpdate();
+        createStatement.close();
+        connection.commit();
+    }
+
+    /**
+     * Adds movie information to the database.
+     * @param movie The movie to add.
+     */
+    private void addDatabaseMovie(Movie movie) {
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:" + DB_NAME);
+
+            PreparedStatement addStatement = connection.prepareStatement(
+                    "INSERT INTO MOVIES " +
+                    "(ID, NAME, FILEPATH, CAST) " +
+                    "VALUES (?, ?, ?, ?)"
+            );
+            addStatement.setInt(1, movie.hashCode());
+            addStatement.setString(2, movie.toString());
+            addStatement.setString(3, movie.getMovieFile().getPath());
+            addStatement.setString(4, movie.getCastList());
+
+            addStatement.executeUpdate();
+            addStatement.close();
+
+            connection.commit();
+            connection.close();
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    /**
+     * Removes a movie from the database.
+     * @param movie The movie to remove.
+     */
+    private void removeDatabaseMovie(Movie movie) {
+        try {
+            Connection connection = DriverManager.getConnection("jdbc:sqlite:" + DB_NAME);
+
+            PreparedStatement addStatement = connection.prepareStatement(
+                    "DELETE FROM MOVIES " +
+                    "WHERE NAME = ?"
+            );
+            addStatement.setString(1, movie.toString());
+
+            addStatement.executeUpdate();
+            addStatement.close();
+
+            connection.commit();
+            connection.close();
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+            LOGGER.log(Level.SEVERE, e.getMessage());
+        }
+    }
+
+    /**
      * Add a movie to the current movie list, if found.
      * @param movieName The name of the movie to add.
+     * @param movieFile The filepath of the given movie
      * @return The movie added, or null if the movie could not be found.
      */
     public Movie addMovie(String movieName, File movieFile) {
@@ -67,6 +169,7 @@ public class MovieManager {
         if (movieDb != null) {
             Movie movie = new Movie(this, movieDb, movieFile);
             addSorted(movie);
+            addDatabaseMovie(movie);
             return movie;
         }
 
@@ -79,6 +182,7 @@ public class MovieManager {
      */
     public void removeMovie(Movie movie) {
         movieList.remove(movie);
+        removeDatabaseMovie(movie);
     }
 
     /**
@@ -178,6 +282,7 @@ public class MovieManager {
     public static void main(String[] args) throws IOException {
 
         MovieManager movieManager = new MovieManager();
+        System.out.println("Enter a movie to search for: ");
         movieManager.addMovie(new BufferedReader(new InputStreamReader(System.in)).readLine(), null);
         for (Movie movie : movieManager.movieList) {
             System.out.println(movie.toString());
