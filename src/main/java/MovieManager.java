@@ -93,7 +93,7 @@ public class MovieManager {
                 "CREATE TABLE MOVIES (" +
                 "ID        INT   NOT NULL  PRIMARY KEY, " +
                 "NAME      TEXT  NOT NULL,              " +
-                "FILEPATH  TEXT  NOT NULL,              " +
+                "FILEPATH  TEXT,                        " +
                 "CAST      TEXT  NOT NULL              )"
         );
         createStatement.executeUpdate();
@@ -114,15 +114,15 @@ public class MovieManager {
                     "(ID, NAME, FILEPATH, CAST) " +
                     "VALUES (?, ?, ?, ?)"
             );
+            File movieFile = movie.getMovieFile();
             addStatement.setInt(1, movie.hashCode());
             addStatement.setString(2, movie.toString());
-            addStatement.setString(3, movie.getMovieFile().getPath());
+            addStatement.setString(3, movieFile != null ? movieFile.getPath() : "NULL");
             addStatement.setString(4, movie.getCastList());
 
             addStatement.executeUpdate();
             addStatement.close();
 
-            connection.commit();
             connection.close();
         }
         catch (SQLException e) {
@@ -148,7 +148,6 @@ public class MovieManager {
             addStatement.executeUpdate();
             addStatement.close();
 
-            connection.commit();
             connection.close();
         }
         catch (SQLException e) {
